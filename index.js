@@ -8,15 +8,16 @@
 
 var EventEmitter = require('events').EventEmitter,
   querystring = require('querystring'),
-  serializer = require('serializer');
+  serializer = require('serializer'),
+  assert = require('assert');
 
 function extend(dest, source) {
   var sources = [],
     i, l;
-  if (typeof (source) == 'object') {
+  if (typeof source === 'object') {
     sources.push(source);
   }
-  else if (typeof (source) == 'array') {
+  else if (typeof source === 'array') {
     for (i = 0, l = sources.length; i < l; ++i) {
       sources.push(extend({}, source[i]));
     }
@@ -34,8 +35,6 @@ function extend(dest, source) {
 }
 
 function parseAuthorization(auth) {
-  console.log('%s called', parseAuthorization.name);
-
   if (!auth) {
     return null;
   }
@@ -46,10 +45,8 @@ function parseAuthorization(auth) {
     return null;
   }
 
-  var creds = new Buffer(parts[1], 'base64').toString();
-  console.log('parse authorization:');
-  console.log(creds);
-  var i = creds.indexOf(':');
+  var creds = new Buffer(parts[1], 'base64').toString(),
+    i = creds.indexOf(':');
 
   if (i === -1) {
     return null;
@@ -62,18 +59,12 @@ function parseAuthorization(auth) {
 }
 
 function Provider(options) {
-  if (arguments.length != 1) {
-    console.warn(
-      'Provider(crypt_key, sign_key) constructor has been deprecated.');
+  assert(typeof options === 'object');
+  assert(typeof options.crypt_key === 'string');
+  assert(typeof options.sign_key === 'string');
 
-    options = {
-      crypt_key: arguments[0],
-      sign_key: arguments[1],
-    };
-  }
-
-  options['authorize_uri'] = options['authorize_uri'] || '/oauth/authorize';
-  options['access_token_uri'] = options['access_token_uri'] || '/oauth/access_token';
+  options.authorize_uri = options.authorize_uri || '/oauth/authorize';
+  options.access_token_uri = options.access_token_uri || '/oauth/access_token';
 
   this.options = options;
   this.serializer = serializer
@@ -88,7 +79,7 @@ Provider.prototype.generateAccessToken = function (
   var out = extend(token_options, {
     access_token: this.serializer.stringify(
       [user_id, client_id, new Date().valueOf(), extra_data]),
-    refresh_token: null,
+    refresh_token: null
   });
   return out;
 };
@@ -174,7 +165,8 @@ Provider.prototype.postAccessToken = function (req, res) {
         self.emit('create_access_token', user_id, client_id,
           function (extra_data, token_options) {
             var atok = self
-              .generateAccessToken(user_id, client_id, extra_data, token_options);
+              .generateAccessToken(
+                user_id, client_id, extra_data, token_options);
 
             if (self.listeners('save_access_token').length > 0) {
               self.emit('save_access_token', user_id, client_id, atok);
