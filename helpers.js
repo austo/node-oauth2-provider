@@ -220,7 +220,7 @@ exports.attach = function (self) {
             'Content-type': 'application/json'
           });
 
-          createAccessToken(self, user_id, client_id, function (atok) {
+          createAccessToken(user_id, client_id, function (atok) {
             res.end(JSON.stringify(atok));
           });
         });
@@ -237,7 +237,7 @@ exports.attach = function (self) {
             'Content-type': 'application/json'
           });
 
-          createAccessToken(self, user_id, client_id, function (atok) {
+          createAccessToken(user_id, client_id, function (atok) {
             self.emit('remove_grant', user_id, client_id, code);
             res.end(JSON.stringify(atok));
           });
